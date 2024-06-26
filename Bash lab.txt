@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# Header Documentation
+# Name of the script: system_report.sh
+# Author name: Leonardo Wrubleski
+# Student Number: 041120109
+# Course and Lab Section Number: CST8102, Section 322
+# Date of completion: 2024-03-27
+# Description: This script generates a system report including sy>
+
+# Function to collect system information
+gather_system_info() {
+    echo "System Information:"
+    echo "Hostname: $(hostname)"
+    echo "Operating System: $(uname -s)"
+    echo "Kernel Version: $(uname -r)"
+    echo "CPU Information:"
+    lscpu | grep 'Model name'
+    totalMem=$(free -m | awk 'NR==2{print $2}')
+    freeMem=$(free -m | awk 'NR==2{print $7}')
+    echo "Total Memory: ${totalMem}MB"
+    echo "Free Memory: ${freeMem}MB"
+    diskUsage=$(df -h / | awk 'NR==2 {print "Total: " $2 ", Used:>
+    echo "$diskUsage"
+    echo ""
+}
+
+# Function to check CPU load
+check_cpu_load() {
+    currentLoad=$(uptime | awk -F'load average: ' '{ print $2 }' >
+    threshold=0.80
+    echo "Current CPU Load: $currentLoad"
+    comparison=$(echo "$currentLoad > $threshold" | bc -l)
+    if [ "$comparison" -eq 1 ]; then
+        echo "WARNING: CPU load is above the threshold."
+    else
+        echo "SUCCESS: CPU load is within acceptable limits."
+    fi
+}
+
+# Function to check memory usage
+check_memory_usage() {
+    totalMem=$(free -m | awk 'NR==2{print $2}')
+    usedMem=$(free -m | awk 'NR==2{print $3}')
+    usage=$(echo "scale=2; $usedMem/$totalMem*100" | bc -l)
+    threshold=50
+    echo "Memory Usage: $usage%"
+    if (( $(echo "$usage > $threshold" | bc -l) )); then
+        echo "WARNING: Memory usage is above the threshold."
+    else
+   fi
+}
+
+# Function to check disk usage
+check_disk_usage() {
+    usage=$(df / | awk 'NR==2{print $5}' | sed 's/%//')
+    threshold=70
+    echo "Disk Usage: $usage%"
+    if [ "$usage" -gt $threshold ]; then
+        echo "WARNING: Disk usage is above the threshold."
+    else
+        echo "SUCCESS: Disk usage is within acceptable limits."
+    fi
+}
+
+# Function to create log file and append system report
+create_log_file() {
+    echo "Generating system report..."
+    gather_system_info > system_report.log
+    check_cpu_load >> system_report.log
+    check_memory_usage >> system_report.log
+    check_disk_usage >> system_report.log
+    echo "System report has been generated and logged."
+    cat system_report.log
+}
+
+# Function to archive the log file
+archive_log_file() {
+    if [ -f system_report.log ]; then
+        tar -czf system_report.tar.gz system_report.log
+        echo "Archive created: system_report.tar.gz"
+    else
+        echo "Log file does not exist. Creating log file..."
+        create_log_file
+        tar -czf system_report.tar.gz system_report.log
+        echo "Archive created: system_report.tar.gz"
+    fi
+}
+
+# Main menu function
+main_menu() {
+    while true; do
+        echo "System Monitoring and reporting"
+        echo "++++++++++++++++++++++++++++++++++++++++++++"
+        echo "1. Generate System Report"
+        echo "2. Archive Log File"
+        echo "3. Exit"
+        echo "+++++++++++++++++++++++++++++++++++++++++++++"
+        read -p "Please choose an option: " option
+
+        case $option in
+            1) create_log_file ;;
+            2) archive_log_file ;;
+            3) echo "Exiting the script."
+               exit ;;
+            *) echo "Invalid option! Please choose a valid menu i>
+        esac
+    done
+}
+
+# Start the main menu
+main_menu
+
+
+
+
+
+
+
